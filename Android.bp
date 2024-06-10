@@ -36,6 +36,7 @@ cc_library_shared {
         "-DOPENCL_ICD_LOADER_VERSION_REV=6",
     ],
     soc_specific: true,
+    enabled: false,
 }
 
 genrule {
