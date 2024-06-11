@@ -16,6 +16,7 @@ cc_library_shared {
         libOpenCL.so. Therefore, the module name must match.
     */
     name: "libOpenCL",
+    compile_multilib: "both",
     srcs: [
         "loader/icd.c",
         "loader/icd_dispatch.c",
