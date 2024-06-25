@@ -1,3 +1,5 @@
+soong_namespace {}
+
 package {
     default_applicable_licenses: ["OpenCL-ICD-Loader_license"],
     default_visibility: ["//visibility:public"],
@@ -37,7 +39,6 @@ cc_library_shared {
         "-DOPENCL_ICD_LOADER_VERSION_REV=6",
     ],
     soc_specific: true,
-    enabled: false,
 }
 
 genrule {
