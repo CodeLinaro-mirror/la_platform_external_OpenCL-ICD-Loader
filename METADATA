@@ -1,15 +1,21 @@
-name: "OpenCL-ICD-Loader"
-description:
-    "OpenCL Installable Client Driver Loader"
+# This project was upgraded with external_updater.
+# Usage: tools/external_updater/updater.sh update external/OpenCL-ICD-Loader
+# For more info, check https://cs.android.com/android/platform/superproject/main/+/main:tools/external_updater/README.md
 
+name: "OpenCL-ICD-Loader"
+description: "OpenCL Installable Client Driver Loader"
 third_party {
-homepage: "https://github.com/KhronosGroup/OpenCL-ICD-Loader"
+  license_type: NOTICE
+  last_upgrade_date {
+    year: 2025
+    month: 1
+    day: 17
+  }
+  homepage: "https://github.com/KhronosGroup/OpenCL-ICD-Loader"
   identifier {
     type: "Archive"
     value: "https://github.com/KhronosGroup/OpenCL-ICD-Loader"
+    version: "v2024.10.24"
     primary_source: true
   }
-  version: "v2023.12.14"
-  last_upgrade_date { year: 2024 month: 2 day: 8 }
-  license_type: NOTICE
 }
