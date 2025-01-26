@@ -109,7 +109,7 @@ static WinLayer* pWinLayerBegin;
 static WinLayer* pWinLayerEnd;
 static WinLayer* pWinLayerCapacity;
 
-static int compareLayer(const void *a, const void *b)
+static int __cdecl compareLayer(const void *a, const void *b)
 {
     return ((WinLayer *)a)->priority < ((WinLayer *)b)->priority ? -1 :
            ((WinLayer *)a)->priority > ((WinLayer *)b)->priority ? 1 : 0;
@@ -185,6 +185,10 @@ void layerFree(WinLayer *pWinLayer)
 // for each vendor encountered
 BOOL CALLBACK khrIcdOsVendorsEnumerate(PINIT_ONCE InitOnce, PVOID Parameter, PVOID *lpContext)
 {
+    (void)InitOnce;
+    (void)Parameter;
+    (void)lpContext;
+
     LONG result;
     BOOL status = FALSE, currentStatus = FALSE;
     const char* platformsName = "SOFTWARE\\Khronos\\OpenCL\\Vendors";
