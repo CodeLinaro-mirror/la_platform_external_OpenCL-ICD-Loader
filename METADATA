@@ -8,14 +8,14 @@ third_party {
   license_type: NOTICE
   last_upgrade_date {
     year: 2025
-    month: 1
-    day: 17
+    month: 8
+    day: 15
   }
   homepage: "https://github.com/KhronosGroup/OpenCL-ICD-Loader"
   identifier {
     type: "Archive"
     value: "https://github.com/KhronosGroup/OpenCL-ICD-Loader"
-    version: "v2024.10.24"
+    version: "v2025.07.22"
     primary_source: true
   }
 }
