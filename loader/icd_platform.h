@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 The Khronos Group Inc.
+ * Copyright (c) 2016-2026 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,13 +24,12 @@
 #define PATH_SEPARATOR  ':'
 #define DIRECTORY_SYMBOL '/'
 #ifdef __ANDROID__
-#if defined(MODERN_ANDROID_VENDOR_PATH)
-#define ICD_VENDOR_PATH "/vendor/etc/Khronos/OpenCL/vendors"
-#define LAYER_PATH "/vendor/etc/Khronos/OpenCL/layers"
-#else
+#ifndef ICD_VENDOR_PATH
 #define ICD_VENDOR_PATH "/system/vendor/Khronos/OpenCL/vendors"
+#endif // ICD_VENDOR_PATH
+#ifndef LAYER_PATH
 #define LAYER_PATH "/system/vendor/Khronos/OpenCL/layers"
-#endif
+#endif // LAYER_PATH
 #else
 #define ICD_VENDOR_PATH "/etc/OpenCL/vendors"
 #define LAYER_PATH "/etc/OpenCL/layers"
