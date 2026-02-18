@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 The Khronos Group Inc.
+ * Copyright (c) 2020-2026 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,13 @@
 #include <stdio.h>
 #include <CL/cl_layer.h>
 
+// condition anonyous union initialization to usage
+#if __CL_HAS_ANON_UNION__
+#define ICD_ANON_UNION_INIT_MEMBER(a) {a}
+#else
+#define ICD_ANON_UNION_INIT_MEMBER(a) a
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -53,8 +60,6 @@ extern "C" {
 extern struct _cl_icd_dispatch dispatch;
 
 extern const struct _cl_icd_dispatch *tdispatch;
-
-extern void _init_dispatch(void);
 
 #ifdef __cplusplus
 }
