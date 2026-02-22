@@ -52,8 +52,8 @@ option(OPENCL_ICD_LOADER_BUILD_SHARED_LIBS "Build OpenCL ICD Loader as shared li
 # It is currently needed default while the specification is being formalized,
 # and to study the performance impact.
 option (ENABLE_OPENCL_LAYERS "Enable OpenCL Layers" ON)
-option (ENABLE_OPENCL_LOADER_MANAGED_DISPATCH "Enable OpenCL Loader managed dispatch" ON)
 include(CMakeDependentOption)
+cmake_dependent_option(ENABLE_OPENCL_LOADER_MANAGED_DISPATCH "Enable OpenCL Loader managed dispatch" ON OPENCL_ICD_LOADER_BUILD_SHARED_LIBS OFF)
 cmake_dependent_option(ENABLE_OPENCL_LAYERINFO "Enable building cllayerinfo tool" ON ENABLE_OPENCL_LAYERS OFF)
 
 include(GNUInstallDirs)
@@ -75,6 +75,9 @@ set (OPENCL_ICD_LOADER_SOURCES
     loader/icd_dispatch.c
     loader/icd_dispatch.h
     loader/icd_dispatch_generated.c
+    loader/icd_trace.c
+    loader/icd_trace.h
+    loader/icd_library.h
     loader/icd_envvars.h
     loader/icd_platform.h)
 include_directories (include)
@@ -84,8 +87,10 @@ if (WIN32)
         loader/windows/adapter.h
         loader/windows/icd_windows.c
         loader/windows/icd_windows.h
+        loader/windows/icd_windows_formats.h
         loader/windows/icd_windows_dxgk.c
         loader/windows/icd_windows_dxgk.h
+        loader/windows/icd_windows_library.c
         loader/windows/icd_windows_envvars.c
         loader/windows/icd_windows_hkr.c
         loader/windows/icd_windows_hkr.h
@@ -109,6 +114,7 @@ if (WIN32)
 else ()
     list (APPEND OPENCL_ICD_LOADER_SOURCES
         loader/linux/icd_linux.c
+        loader/linux/icd_linux_library.c
         loader/linux/icd_linux_envvars.c
         loader/linux/icd_exports.map)
 endif ()
@@ -127,6 +133,7 @@ set_target_properties (OpenCL PROPERTIES VERSION 1\.0\.0 SOVERSION "1")
 
 if (WIN32)
     target_link_libraries (OpenCL PRIVATE cfgmgr32.lib runtimeobject.lib)
+    string(APPEND OPENCL_LIBS_PRIVATE_PC " -lcfgmgr32 -lruntimeobject")
 
     # Generate a DLL without a "lib" prefix for mingw.
     if (MINGW OR MSYS OR CYGWIN)
@@ -135,6 +142,7 @@ if (WIN32)
     endif()
 else()
     target_link_libraries (OpenCL PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+    string(APPEND OPENCL_LIBS_PRIVATE_PC " ${CMAKE_THREAD_LIBS_INIT}")
     if (NOT APPLE)
         set_target_properties (OpenCL PROPERTIES LINK_FLAGS "-Wl,--version-script -Wl,${CMAKE_CURRENT_SOURCE_DIR}/loader/linux/icd_exports.map")
         if (OPENCL_ICD_LOADER_PIC)
@@ -161,9 +169,10 @@ set (OPENCL_COMPILE_DEFINITIONS
     CL_NO_NON_ICD_DISPATCH_EXTENSION_PROTOTYPES
     OPENCL_ICD_LOADER_VERSION_MAJOR=3
     OPENCL_ICD_LOADER_VERSION_MINOR=0
-    OPENCL_ICD_LOADER_VERSION_REV=7
+    OPENCL_ICD_LOADER_VERSION_REV=8
     $<$<BOOL:${ENABLE_OPENCL_LAYERS}>:CL_ENABLE_LAYERS>
     $<$<BOOL:${ENABLE_OPENCL_LOADER_MANAGED_DISPATCH}>:CL_ENABLE_LOADER_MANAGED_DISPATCH>
+    $<$<BOOL:${OPENCL_ICD_LOADER_BUILD_SHARED_LIBS}>:CL_SHARED_BUILD>
 )
 
 target_compile_definitions (OpenCL
@@ -177,6 +186,9 @@ target_include_directories (OpenCL
     loader
 )
 target_link_libraries (OpenCL PUBLIC ${CMAKE_DL_LIBS})
+if(CMAKE_DL_LIBS STREQUAL "dl")
+  string(APPEND OPENCL_LIBS_PRIVATE_PC " -ldl")
+endif()
 
 if (ENABLE_OPENCL_LAYERINFO)
 
@@ -223,7 +235,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR OPENCL_ICD_LOADER_BUILD_TESTING)
 endif()
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR OPENCL_ICD_LOADER_BUILD_TESTING) AND BUILD_TESTING)
     add_subdirectory (test)
-endif()
+
+endif ()
+
 
 install(
   TARGETS OpenCL
@@ -297,3 +311,4 @@ install (TARGETS OpenCL
       DESTINATION ${CMAKE_INSTALL_LIBDIR}
     COMPONENT dev
     NAMELINK_ONLY)
+install_opencl_pc()

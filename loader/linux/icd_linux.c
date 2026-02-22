@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2020 The Khronos Group Inc.
+ * Copyright (c) 2016-2026 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@
 #include "icd.h"
 #include "icd_envvars.h"
 
-#include <dlfcn.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -218,7 +217,7 @@ static inline void khrIcdOsDirEnumerate(const char *path, const char *env,
 // go through the list of vendors in the two configuration files
 void khrIcdOsVendorsEnumerate(void)
 {
-    khrIcdInitializeTrace();
+    khrIcdInitializeEnvOptions();
     khrIcdVendorsEnumerateEnv();
 
     khrIcdOsDirEnumerate(ICD_VENDOR_PATH, "OCL_ICD_VENDORS", ".icd", khrIcdVendorAdd, 0);
@@ -237,31 +236,9 @@ void khrIcdOsVendorsEnumerateOnce(void)
     pthread_once(&initialized, khrIcdOsVendorsEnumerate);
 }
 
-/*
- *
- * Dynamic library loading functions
- *
- */
-
-// dynamically load a library.  returns NULL on failure
-void *khrIcdOsLibraryLoad(const char *libraryName)
-{
-    void* ret = dlopen (libraryName, RTLD_NOW);
-    if (NULL == ret)
-    {
-        KHR_ICD_TRACE("Failed to load driver because %s.\n", dlerror());
-    }
-    return ret;
+#ifndef CL_LAYER_INFO
+static
+void __attribute__((destructor)) khrIcdDestructor(void) {
+    khrIcdDeinitialize();
 }
-
-// get a function pointer from a loaded library.  returns NULL on failure.
-void *khrIcdOsLibraryGetFunctionAddress(void *library, const char *functionName)
-{
-    return dlsym(library, functionName);
-}
-
-// unload a library
-void khrIcdOsLibraryUnload(void *library)
-{
-    dlclose(library);
-}
+#endif
