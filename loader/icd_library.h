@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2026 The Khronos Group Inc.
+ * Copyright (c) 2026 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,19 @@
  * OpenCL is a trademark of Apple Inc. used under license by Khronos.
  */
 
-#include <stdbool.h>
-#include "icd_windows.h"
+#ifndef _ICD_LIBRARY_H_
+#define _ICD_LIBRARY_H_
 
-bool khrIcdOsVendorsEnumerateAppPackage(void);
+// dynamically load a library.  returns NULL on failure
+// n.b, this call is OS-specific
+void *khrIcdOsLibraryLoad(const char *libraryName);
+
+// get a function pointer from a loaded library.  returns NULL on failure.
+// n.b, this call is OS-specific
+void *khrIcdOsLibraryGetFunctionAddress(void *library, const char *functionName);
+
+// unload a library.
+// n.b, this call is OS-specific
+void khrIcdOsLibraryUnload(void *library);
+
+#endif

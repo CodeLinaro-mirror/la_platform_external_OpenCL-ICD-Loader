@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2026 The Khronos Group Inc.
+ * Copyright (c) 2026 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,19 @@
  * OpenCL is a trademark of Apple Inc. used under license by Khronos.
  */
 
-#include <stdbool.h>
-#include "icd_windows.h"
+#ifndef _ICD_WINDOWS_FORMATS_H_
+#define _ICD_WINDOWS_FORMATS_H_
 
-bool khrIcdOsVendorsEnumerateAppPackage(void);
+#ifdef _LP64
+#define PRIDW_PREFIX
+#define PRIUL_PREFIX
+#else
+#define PRIDW_PREFIX "l"
+#define PRIUL_PREFIX "l"
+#endif
+#define PRIuDW PRIDW_PREFIX "u"
+#define PRIxDW PRIDW_PREFIX "x"
+#define PRIuUL PRIUL_PREFIX "u"
+#define PRIxUL PRIUL_PREFIX "x"
+
+#endif
