@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2020 The Khronos Group Inc.
+ * Copyright (c) 2016-2026 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@
 
 #include "icd_platform.h"
 #include "icd_dispatch.h"
+#include "icd_trace.h"
+#include "icd_library.h"
 
 #ifndef CL_USE_DEPRECATED_OPENCL_1_0_APIS
 #define CL_USE_DEPRECATED_OPENCL_1_0_APIS
@@ -49,6 +51,9 @@
 #include <CL/cl.h>
 #include <CL/cl_ext.h>
 #include <CL/cl_icd.h>
+#if defined(CL_ENABLE_LAYERS)
+#include <CL/cl_layer.h>
+#endif // defined(CL_ENABLE_LAYERS)
 #include <stdio.h>
 
 /*
@@ -85,6 +90,9 @@ struct KHRicdVendorRec
     // the extension suffix for this platform
     char *suffix;
 
+    // can this vendor library be unloaded?
+    cl_bool unloadable;
+
     // function pointer to the ICD platform IDs extracted from the library
     pfn_clGetExtensionFunctionAddress clGetExtensionFunctionAddress;
 
@@ -98,12 +106,11 @@ struct KHRicdVendorRec
 
     // next vendor in the list vendors
     KHRicdVendor *next;
+    KHRicdVendor *prev;
 };
 
 // the global state
 extern KHRicdVendor * khrIcdVendors;
-
-extern int khrEnableTrace;
 
 #if defined(CL_ENABLE_LAYERS)
 /*
@@ -123,14 +130,17 @@ struct KHRLayer
 #ifdef CL_LAYER_INFO
     // The layer library name
     char *libraryName;
-    // the pointer to the clGetLayerInfo funciton
-    void *p_clGetLayerInfo;
+    // the pointer to the clGetLayerInfo function
+    pfn_clGetLayerInfo p_clGetLayerInfo;
 #endif
+    // the pointer to the clDeinitLayer function
+    pfn_clDeinitLayer p_clDeinitLayer;
 };
 
 // the global layer state
 extern struct KHRLayer * khrFirstLayer;
-extern struct _cl_icd_dispatch khrMasterDispatch;
+extern const struct _cl_icd_dispatch khrMainDispatch;
+extern const struct _cl_icd_dispatch khrDeinitDispatch;
 #endif // defined(CL_ENABLE_LAYERS)
 
 /* 
@@ -144,8 +154,11 @@ extern struct _cl_icd_dispatch khrMasterDispatch;
 // API (e.g, getPlatformIDs, etc).
 void khrIcdInitialize(void);
 
-// entrypoint to check and initialize trace.
-void khrIcdInitializeTrace(void);
+// entrypoint to check and initialize env options.
+void khrIcdInitializeEnvOptions(void);
+
+// entrypoint to release icd resources
+void khrIcdDeinitialize(void);
 
 // go through the list of vendors (in /etc/OpenCL.conf or through 
 // the registry) and call khrIcdVendorAdd for each vendor encountered
@@ -164,47 +177,16 @@ void khrIcdLayersEnumerateEnv(void);
 // add a layer to the layer chain
 void khrIcdLayerAdd(const char *libraryName);
 
-// dynamically load a library.  returns NULL on failure
-// n.b, this call is OS-specific
-void *khrIcdOsLibraryLoad(const char *libraryName);
-
-// get a function pointer from a loaded library.  returns NULL on failure.
-// n.b, this call is OS-specific
-void *khrIcdOsLibraryGetFunctionAddress(void *library, const char *functionName);
-
-// unload a library.
-// n.b, this call is OS-specific
-void khrIcdOsLibraryUnload(void *library);
-
 // parse properties and determine the platform to use from them
 void khrIcdContextPropertiesGetPlatform(
     const cl_context_properties *properties, 
     cl_platform_id *outPlatform);
 
-// internal tracing macros
-#define KHR_ICD_TRACE(...) \
-do \
-{ \
-    if (khrEnableTrace) \
-    { \
-        fprintf(stderr, "KHR ICD trace at %s:%d: ", __FILE__, __LINE__); \
-        fprintf(stderr, __VA_ARGS__); \
-    } \
-} while (0)
-
-#ifdef _WIN32
-#define KHR_ICD_WIDE_TRACE(...) \
-do \
-{ \
-    if (khrEnableTrace) \
-    { \
-        fwprintf(stderr, L"KHR ICD trace at %hs:%d: ", __FILE__, __LINE__); \
-        fwprintf(stderr, __VA_ARGS__); \
-    } \
-} while (0)
-
+// condition anonyous union initialization to usage
+#if __CL_HAS_ANON_UNION__
+#define ICD_ANON_UNION_INIT_MEMBER(a) {a}
 #else
-#define KHR_ICD_WIDE_TRACE(...)
+#define ICD_ANON_UNION_INIT_MEMBER(a) a
 #endif
 
 #define KHR_ICD_ERROR_RETURN_ERROR(_error)                          \
