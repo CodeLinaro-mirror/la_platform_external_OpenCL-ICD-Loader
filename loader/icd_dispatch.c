@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2020 The Khronos Group Inc.
+ * Copyright (c) 2012-2026 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -303,9 +303,25 @@ static inline void* clGetExtensionFunctionAddressForPlatform_body(
     // to get the extension function address.
 
     KHR_ICD_VALIDATE_HANDLE_RETURN_ERROR(platform, NULL);
+
+#define KHR_ICD_REJECT_EXTENSION_FUNCTION(name)                                \
+    do                                                                         \
+    {                                                                          \
+        if (!strcmp(function_name, #name))                                     \
+        {                                                                      \
+            return NULL;                                                       \
+        }                                                                      \
+    } while (0)
+
+    // Reject ICD-specific functions that could be misused by users
+    KHR_ICD_REJECT_EXTENSION_FUNCTION(clIcdGetPlatformIDsKHR);
+    KHR_ICD_REJECT_EXTENSION_FUNCTION(clIcdGetFunctionAddressForPlatformKHR);
+    KHR_ICD_REJECT_EXTENSION_FUNCTION(clIcdSetPlatformDispatchDataKHR);
+
     return KHR_ICD2_DISPATCH(platform)->clGetExtensionFunctionAddressForPlatform(
         platform,
         function_name);
+#undef KHR_ICD_REJECT_EXTENSION_FUNCTION
 }
 
 void* CL_API_CALL clGetExtensionFunctionAddressForPlatform_disp(

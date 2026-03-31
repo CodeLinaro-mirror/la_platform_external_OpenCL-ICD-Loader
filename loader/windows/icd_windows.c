@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2020 The Khronos Group Inc.
+ * Copyright (c) 2016-2026 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -195,7 +195,7 @@ BOOL CALLBACK khrIcdOsVendorsEnumerate(PINIT_ONCE InitOnce, PVOID Parameter, PVO
     HKEY platformsKey = NULL;
     DWORD dwIndex;
 
-    khrIcdInitializeTrace();
+    khrIcdInitializeEnvOptions();
     khrIcdVendorsEnumerateEnv();
 
     currentStatus = khrIcdOsVendorsEnumerateDXGK();
@@ -411,39 +411,13 @@ void khrIcdOsVendorsEnumerateOnce()
     InitOnceExecuteOnce(&initialized, khrIcdOsVendorsEnumerate, NULL, NULL);
 }
 
-/*
- *
- * Dynamic library loading functions
- *
- */
-
-// dynamically load a library.  returns NULL on failure
-void *khrIcdOsLibraryLoad(const char *libraryName)
-{
-    HMODULE hTemp = LoadLibraryExA(libraryName, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
-    if (!hTemp && GetLastError() == ERROR_INVALID_PARAMETER)
-    {
-        hTemp = LoadLibraryExA(libraryName, NULL, 0);
+#if !defined(CL_LAYER_INFO) && defined(CL_SHARED_BUILD)
+BOOL APIENTRY DllMain(HINSTANCE hinst, DWORD reason, LPVOID reserved) {
+    (void)hinst;
+    (void)reserved;
+    if (reason == DLL_PROCESS_DETACH) {
+        khrIcdDeinitialize();
     }
-    if (!hTemp)
-    {
-        KHR_ICD_TRACE("Failed to load driver. Windows error code is %"PRIuDW".\n", GetLastError());
-    }
-    return (void*)hTemp;
+    return TRUE;
 }
-
-// get a function pointer from a loaded library.  returns NULL on failure.
-void *khrIcdOsLibraryGetFunctionAddress(void *library, const char *functionName)
-{
-    if (!library || !functionName)
-    {
-        return NULL;
-    }
-    return GetProcAddress( (HMODULE)library, functionName);
-}
-
-// unload a library.
-void khrIcdOsLibraryUnload(void *library)
-{
-    FreeLibrary( (HMODULE)library);
-}
+#endif

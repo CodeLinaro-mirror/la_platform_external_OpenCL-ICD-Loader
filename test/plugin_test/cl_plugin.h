@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2026 The Khronos Group Inc.
+ * Copyright (c) 2026 The Khronos Group Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,18 @@
  *
  * OpenCL is a trademark of Apple Inc. used under license by Khronos.
  */
+#ifndef _CL_PLUGIN_H_
+#define _CL_PLUGIN_H_
 
-#include <stdbool.h>
-#include "icd_windows.h"
+#define PLUGIN_INIT plugin_init
+#define XSTRING(x) TO_STRING(x)
+#define TO_STRING(x) #x
+#define PLUGIN_INIT_NAME XSTRING(PLUGIN_INIT)
 
-bool khrIcdOsVendorsEnumerateAppPackage(void);
+#define PLUGIN_SUCCESS 0
+#define PLUGIN_ERROR   1
+
+typedef int plugin_init_fn(void);
+typedef plugin_init_fn *plugin_init_pfn;
+
+#endif
